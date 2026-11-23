@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "anthropic"
     GAPGPT_API_KEY: str = ""
     GAPGPT_MODEL: str = "gpt-4o-mini"
+    # مدل سبک برای تحلیل داشبورد ادمین (خالی = همان GAPGPT_MODEL)
+    ANALYTICS_AI_MODEL: str = ""
 
     # Virtual try-on (POST /chat/try-on): sends the customer's photo plus the
     # product image to an OpenAI-compatible image-edit endpoint (GapGPT by
