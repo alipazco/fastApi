@@ -12,7 +12,7 @@ from app.core.config import settings
 #
 # STORAGE_ROOT is configurable (see app/core/config.py) because it MUST
 # match wherever the persistent volume is actually mounted in production -
-# on Runflare that's /storage, not the project-relative default below which
+# on Runflare it is the disk mount (e.g. /uploads), not the project-relative default below which
 # only lives inside the container's ephemeral filesystem.
 STORAGE_ROOT = (
     Path(settings.STORAGE_ROOT)
