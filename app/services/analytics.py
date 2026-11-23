@@ -250,7 +250,12 @@ def build_overview(db: Session, days: int = 30) -> dict:
     coupon_info = {"orders": len(coupon_orders), "discount": sum(o.coupon_amount or 0 for o in coupon_orders)}
 
     # ----- پروب مجازی و اثرش روی خرید -----
-    tryon_rows = db.query(TryOnUsage).filter(TryOnUsage.created_at >= start).all()
+    try:
+        tryon_rows = db.query(TryOnUsage).filter(TryOnUsage.created_at >= start).all()
+    except Exception as exc:  # noqa: BLE001 - e.g. migration d2e3f4a5b6c7 not applied yet
+        logger.warning("analytics: tryon_usage unavailable (run alembic upgrade head?): %r", exc)
+        db.rollback()
+        tryon_rows = []
     tryon_users = {r.user_id for r in tryon_rows}
     tryon_info = {"tries": len(tryon_rows), "users": len(tryon_users),
                   "bought": len(tryon_users & buyers)}
