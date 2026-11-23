@@ -25,12 +25,14 @@ class Settings(BaseSettings):
     AI_ASSISTANT_MAX_TOKENS: int = 1024
 
     # AI_PROVIDER picks which one app/services/ai_assistant.py actually calls:
-    # "anthropic" (direct Claude API) or "gapgpt" (api.gapgpt.app, an
+    # "anthropic" (direct Claude API) or "gapgpt" (api.gapgpt.ir, an
     # OpenAI-compatible proxy - useful where direct access to the big
     # providers' APIs is unreliable). Only ANTHROPIC_API_KEY or only
     # GAPGPT_API_KEY needs to be set, matching whichever provider is active.
     AI_PROVIDER: str = "anthropic"
     GAPGPT_API_KEY: str = ""
+    # Base URL of the GapGPT OpenAI-compatible API (domain moved gapgpt.app -> gapgpt.ir)
+    GAPGPT_BASE_URL: str = "https://api.gapgpt.ir/v1"
     GAPGPT_MODEL: str = "gpt-4o-mini"
     # مدل سبک برای تحلیل داشبورد ادمین (خالی = همان GAPGPT_MODEL)
     ANALYTICS_AI_MODEL: str = ""
@@ -42,7 +44,8 @@ class Settings(BaseSettings):
     # customer uses the manual mode. TRYON_RATE_LIMIT is only an extra per-IP abuse guard.
     # Set TRYON_ENABLED=false to switch it off.
     TRYON_ENABLED: bool = True
-    TRYON_IMAGES_URL: str = "https://api.gapgpt.app/v1/images/edits"
+    # empty = {GAPGPT_BASE_URL}/images/edits
+    TRYON_IMAGES_URL: str = ""
     TRYON_MODEL: str = "gapgpt/qwen-image-2.1"
     TRYON_RATE_LIMIT: int = 5
     TRYON_RATE_WINDOW_SECONDS: int = 600
@@ -81,6 +84,14 @@ class Settings(BaseSettings):
     PUBLIC_API_URL: str = "https://api.slipperpaz.ir"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def gapgpt_chat_url(self) -> str:
+        return f"{self.GAPGPT_BASE_URL.rstrip('/')}/chat/completions"
+
+    @property
+    def tryon_images_url(self) -> str:
+        return self.TRYON_IMAGES_URL or f"{self.GAPGPT_BASE_URL.rstrip('/')}/images/edits"
 
     @property
     def cors_origins_list(self) -> list[str]:

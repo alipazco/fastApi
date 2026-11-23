@@ -12,7 +12,6 @@ from app.services.storage import image_url
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
-GAPGPT_URL = "https://api.gapgpt.app/v1/chat/completions"
 IMAGE_SUBDIR = "products"
 MAX_TOOL_ROUNDS = 5
 REQUEST_TIMEOUT = 25.0
@@ -496,7 +495,7 @@ def _run_gapgpt(db: Session, current_user: User | None, messages: list[dict], sy
 
     for _ in range(MAX_TOOL_ROUNDS):
         data = _post_with_retry(
-            GAPGPT_URL,
+            settings.gapgpt_chat_url,
             headers,
             {
                 "model": settings.GAPGPT_MODEL,

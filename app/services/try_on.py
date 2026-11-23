@@ -146,7 +146,7 @@ def generate(photo_png: bytes, product_png: bytes, prompt: str) -> str:
         for field in ("image[]", "image"):
             for attempt in range(2):  # one retry on a transient 5xx from the provider
                 response = httpx.post(
-                    settings.TRYON_IMAGES_URL,
+                    settings.tryon_images_url,
                     headers={"Authorization": f"Bearer {settings.GAPGPT_API_KEY}"},
                     data={"model": settings.TRYON_MODEL, "prompt": prompt, "n": "1", "size": "1024x1024"},
                     files=[
@@ -166,12 +166,12 @@ def generate(photo_png: bytes, product_png: bytes, prompt: str) -> str:
         response.raise_for_status()
         item = response.json()["data"][0]
     except (httpx.TimeoutException, httpx.ConnectError) as exc:
-        logger.error("Try-on provider %s unreachable/timeout: %r", settings.TRYON_IMAGES_URL, exc)
+        logger.error("Try-on provider %s unreachable/timeout: %r", settings.tryon_images_url, exc)
         raise TryOnError("ساخت عکس طول کشید؛ دوباره امتحان کن.", 504) from exc
     except (httpx.HTTPStatusError, KeyError, IndexError, ValueError) as exc:
         body = exc.response.text[:500] if isinstance(exc, httpx.HTTPStatusError) else repr(exc)
         code = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else "-"
-        logger.error("Try-on provider %s -> HTTP %s: %s", settings.TRYON_IMAGES_URL, code, body)
+        logger.error("Try-on provider %s -> HTTP %s: %s", settings.tryon_images_url, code, body)
         raise TryOnError("ساخت عکس انجام نشد؛ چند لحظه دیگه دوباره امتحان کن.", 502) from exc
 
     if item.get("b64_json"):

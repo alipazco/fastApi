@@ -360,7 +360,7 @@ def _ask_ai(ov: dict) -> list[dict]:
     if not settings.GAPGPT_API_KEY:
         raise RuntimeError("no GAPGPT_API_KEY")
     resp = httpx.post(
-        "https://api.gapgpt.app/v1/chat/completions",
+        settings.gapgpt_chat_url,
         headers={"Authorization": f"Bearer {settings.GAPGPT_API_KEY}"},
         json={
             "model": settings.ANALYTICS_AI_MODEL or settings.GAPGPT_MODEL,
