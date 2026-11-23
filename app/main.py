@@ -34,8 +34,11 @@ app.add_middleware(
 )
 
 # Uploaded product/category images - equivalent to Laravel's public/storage symlink
-storage_dir = Path(__file__).resolve().parent.parent / "storage"
-storage_dir.mkdir(exist_ok=True)
+# Must be the same directory uploads are written to (STORAGE_ROOT), otherwise
+# files saved on the persistent volume would not be served.
+from app.services.storage import STORAGE_ROOT as storage_dir
+
+storage_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/storage", StaticFiles(directory=str(storage_dir)), name="storage")
 
 app.include_router(auth_router, prefix="/api/v1")
