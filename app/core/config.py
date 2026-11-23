@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     # every redeploy.
     STORAGE_ROOT: str = ""
 
+    # Public origin of this API; used to build absolute image URLs. For local
+    # dev set PUBLIC_API_URL=http://localhost:8000 in .env
+    PUBLIC_API_URL: str = "https://api.slipperpaz.ir"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property

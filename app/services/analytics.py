@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models import Coupon, Order, OrderItems, Product, ProductColor, ProductSize, Transaction, User
 from app.models.tryon import TryOnUsage
+from app.services.storage import image_url
 from app.utils.jalali import _MONTHS
 
 logger = logging.getLogger(__name__)
@@ -179,7 +180,7 @@ def build_overview(db: Session, days: int = 30) -> dict:
         p = products.get(pid)
         return {
             "id": pid, "name": p.name if p else f"#{pid}",
-            "image": p.primary_image if p else None,
+            "image": image_url(p.primary_image, "products") if p else None,
             "units": v["units"], "revenue": v["revenue"],
             "stock": _product_stock(p, sizes_by_product) if p else None,
         }
@@ -193,14 +194,14 @@ def build_overview(db: Session, days: int = 30) -> dict:
             continue
         stock_rows.append((p, _product_stock(p, sizes_by_product)))
     low_stock = [
-        {"id": p.id, "name": p.name, "image": p.primary_image, "stock": s,
+        {"id": p.id, "name": p.name, "image": image_url(p.primary_image, "products"), "stock": s,
          "units_sold": agg.get(p.id, {}).get("units", 0)}
         for p, s in sorted(stock_rows, key=lambda t: t[1]) if s <= LOW_STOCK_THRESHOLD
     ][:8]
     # پرفروش‌های رو‌به‌اتمام اول بیان
     low_stock.sort(key=lambda r: (r["stock"], -r["units_sold"]))
     slow_movers = [
-        {"id": p.id, "name": p.name, "image": p.primary_image, "stock": s}
+        {"id": p.id, "name": p.name, "image": image_url(p.primary_image, "products"), "stock": s}
         for p, s in sorted(stock_rows, key=lambda t: -t[1])
         if s > LOW_STOCK_THRESHOLD and p.id not in agg
     ][:8]
