@@ -83,6 +83,18 @@ class Settings(BaseSettings):
     # dev set PUBLIC_API_URL=http://localhost:8000 in .env
     PUBLIC_API_URL: str = "https://api.slipperpaz.ir"
 
+    # ---- Instagram (DM + comment auto-reply). Uses Instagram API with Instagram Login.
+    # NOTE: this is a Meta token, unrelated to GAPGPT_API_KEY (GapGPT only writes the replies).
+    INSTAGRAM_ENABLED: bool = False
+    INSTAGRAM_ACCESS_TOKEN: str = ""      # long-lived token of the business account
+    INSTAGRAM_ACCOUNT_ID: str = ""        # the business account's IG user id
+    INSTAGRAM_APP_SECRET: str = ""        # verifies X-Hub-Signature-256 on webhooks
+    INSTAGRAM_VERIFY_TOKEN: str = ""      # any random string; same value in the Meta webhook setup
+    INSTAGRAM_GRAPH_URL: str = "https://graph.instagram.com/v21.0"
+    SITE_URL: str = "https://slipperpaz.ir"
+    # comments: reply publicly and send a private DM when the comment is a question
+    INSTAGRAM_COMMENT_REPLIES: bool = True
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property

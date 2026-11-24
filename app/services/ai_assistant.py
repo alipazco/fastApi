@@ -348,7 +348,11 @@ def _openai_tools() -> list[dict]:
 
 
 def run_assistant(
-    db: Session, current_user: User | None, messages: list[dict], product_slug: str | None = None
+    db: Session,
+    current_user: User | None,
+    messages: list[dict],
+    product_slug: str | None = None,
+    extra_system: str = "",
 ) -> dict:
     """
     Runs the tool-use agent loop and returns
@@ -366,6 +370,8 @@ def run_assistant(
     results either way, just a different wire format underneath.
     """
     system_prompt = SYSTEM_PROMPT
+    if extra_system:
+        system_prompt += "\n\n" + extra_system
     if product_slug:
         system_prompt += f"\n\nمشتری الان توی صفحه محصول با slug \"{product_slug}\" هست - اگه سوالش درباره همین محصوله، با get_product_details جزئیاتش رو بگیر."
 
