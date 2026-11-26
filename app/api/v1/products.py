@@ -246,6 +246,17 @@ def featured_products(limit: int = 8, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/products/on-sale")
+def on_sale_products(limit: int = 60, db: Session = Depends(get_db)):
+    """Every product that is discounted right now (Black Friday / occasion pages), biggest discount first."""
+    limit = max(1, min(limit, 120))
+    now = datetime.utcnow()
+    base = _with_variants(_active_products(db)).filter(Product.status == 1, Product.sale_price > 0)
+    items = [_serialize_product(p) for p in base.order_by(Product.created_at.desc()).all() if _is_on_sale(p, now)]
+    items.sort(key=lambda x: x["discount_percent"], reverse=True)
+    return success_response({"products": items[:limit], "total": len(items)})
+
+
 @router.get("/products/products-tabs")
 def products_tabs(db: Session = Depends(get_db)):
     categories = db.query(Category).all()

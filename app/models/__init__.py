@@ -14,6 +14,7 @@ from app.models.transaction import Transaction
 from app.models.content import ContactUs, Slider, Story
 from app.models.cart import Cart, CartItem
 from app.models.tryon import TryOnUsage
+from app.models.occasion import Occasion
 from app.models.instagram import InstagramMessage, InstagramEvent
 
 __all__ = [
@@ -38,6 +39,7 @@ __all__ = [
     "Cart",
     "CartItem",
     "TryOnUsage",
+    "Occasion",
     "InstagramMessage",
     "InstagramEvent",
 ]
