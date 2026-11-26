@@ -25,13 +25,30 @@ class Settings(BaseSettings):
     AI_ASSISTANT_MAX_TOKENS: int = 1024
 
     # AI_PROVIDER picks which one app/services/ai_assistant.py actually calls:
-    # "anthropic" (direct Claude API) or "gapgpt" (api.gapgpt.app, an
+    # "anthropic" (direct Claude API) or "gapgpt" (api.gapgpt.ir, an
     # OpenAI-compatible proxy - useful where direct access to the big
     # providers' APIs is unreliable). Only ANTHROPIC_API_KEY or only
     # GAPGPT_API_KEY needs to be set, matching whichever provider is active.
     AI_PROVIDER: str = "anthropic"
     GAPGPT_API_KEY: str = ""
+    # Base URL of the GapGPT OpenAI-compatible API (domain moved gapgpt.app -> gapgpt.ir)
+    GAPGPT_BASE_URL: str = "https://api.gapgpt.ir/v1"
     GAPGPT_MODEL: str = "gpt-4o-mini"
+    # مدل سبک برای تحلیل داشبورد ادمین (خالی = همان GAPGPT_MODEL)
+    ANALYTICS_AI_MODEL: str = ""
+
+    # Virtual try-on (POST /chat/try-on): sends the customer's photo plus the
+    # product image to an OpenAI-compatible image-edit endpoint (GapGPT by
+    # default, using GAPGPT_API_KEY above). Each call costs money, so it is
+    # limited to ONE AI try-on per logged-in user per day (Iran time); after that the
+    # customer uses the manual mode. TRYON_RATE_LIMIT is only an extra per-IP abuse guard.
+    # Set TRYON_ENABLED=false to switch it off.
+    TRYON_ENABLED: bool = True
+    # empty = {GAPGPT_BASE_URL}/images/edits
+    TRYON_IMAGES_URL: str = ""
+    TRYON_MODEL: str = "gapgpt/qwen-image-2.1"
+    TRYON_RATE_LIMIT: int = 5
+    TRYON_RATE_WINDOW_SECONDS: int = 600
 
     CORS_ORIGINS: str = "https://slipperpaz.ir"
 
@@ -49,21 +66,57 @@ class Settings(BaseSettings):
     # مدل Product اضافه نشده، این تنها تخمینیه که داریم.
     TAPIN_DEFAULT_BOX_ID: int = 0
     TAPIN_ITEM_WEIGHT_GRAMS: int = 400
+    # JSON list overriding the customer-facing Tapin options, e.g.
+    # [{"order_type":1,"carrier":"پست پیشتاز","title":"پیشتاز","eta":"۳ تا ۵ روز"}]
+    TAPIN_TIERS: str = ""
     TAPIN_PACKET_TYPE: int = 2  # 1=پاکت 2=بسته 3=پاکت جوف
 
     # Absolute path where uploaded images/files are written. Leave empty to
     # default to <project_root>/storage (fine for local dev). In production
     # this MUST match the mount path of the persistent volume attached to
-    # the service (currently mounted at /storage on Runflare), otherwise
+    # the service (e.g. /uploads on Runflare), otherwise
     # uploads land in the container's ephemeral filesystem and vanish on
     # every redeploy.
     STORAGE_ROOT: str = ""
 
+    # Public origin of this API; used to build absolute image URLs. For local
+    # dev set PUBLIC_API_URL=http://localhost:8000 in .env
+    PUBLIC_API_URL: str = "https://api.slipperpaz.ir"
+
+    # ---- Instagram (DM + comment auto-reply). Uses Instagram API with Instagram Login.
+    # NOTE: this is a Meta token, unrelated to GAPGPT_API_KEY (GapGPT only writes the replies).
+    INSTAGRAM_ENABLED: bool = False
+    INSTAGRAM_ACCESS_TOKEN: str = ""      # long-lived token of the business account
+    INSTAGRAM_ACCOUNT_ID: str = ""        # the business account's IG user id
+    INSTAGRAM_APP_SECRET: str = ""        # verifies X-Hub-Signature-256 on webhooks
+    INSTAGRAM_VERIFY_TOKEN: str = ""      # any random string; same value in the Meta webhook setup
+    INSTAGRAM_GRAPH_URL: str = "https://graph.instagram.com/v21.0"
+    SITE_URL: str = "https://slipperpaz.ir"
+    # comments: reply publicly and send a private DM when the comment is a question
+    INSTAGRAM_COMMENT_REPLIES: bool = True
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property
+    def gapgpt_chat_url(self) -> str:
+        return f"{self.GAPGPT_BASE_URL.rstrip('/')}/chat/completions"
+
+    @property
+    def tryon_images_url(self) -> str:
+        return self.TRYON_IMAGES_URL or f"{self.GAPGPT_BASE_URL.rstrip('/')}/images/edits"
+
+    @property
     def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+        # Tolerant parsing: accepts "a,b", '["a","b"]' or "[a,b]" (with stray
+        # quotes/brackets/spaces/trailing slashes) - a browser's Origin header
+        # never has a trailing slash, so one in .env would silently never match.
+        raw = self.CORS_ORIGINS.strip().strip("[]")
+        origins = []
+        for item in raw.replace("\n", ",").split(","):
+            item = item.strip().strip("\"'").strip().rstrip("/")
+            if item:
+                origins.append(item)
+        return origins
 
     @property
     def sqlalchemy_database_url(self) -> str:

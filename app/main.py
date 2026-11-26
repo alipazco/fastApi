@@ -20,6 +20,10 @@ from app.api.v1.users import admin_router as users_admin_router
 from app.api.v1.contact import router as contact_router, admin_router as contact_admin_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.tapin import router as tapin_router, admin_router as tapin_admin_router
+from app.api.v1.pos import admin_router as pos_admin_router
+from app.api.v1.occasions import router as occasions_router, admin_router as occasions_admin_router
+from app.api.v1.analytics import admin_router as analytics_admin_router
+from app.api.v1.instagram import router as instagram_router, admin_router as instagram_admin_router
 from app.core.config import settings
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.APP_DEBUG)
@@ -33,8 +37,11 @@ app.add_middleware(
 )
 
 # Uploaded product/category images - equivalent to Laravel's public/storage symlink
-storage_dir = Path(__file__).resolve().parent.parent / "storage"
-storage_dir.mkdir(exist_ok=True)
+# Must be the same directory uploads are written to (STORAGE_ROOT), otherwise
+# files saved on the persistent volume would not be served.
+from app.services.storage import STORAGE_ROOT as storage_dir
+
+storage_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/storage", StaticFiles(directory=str(storage_dir)), name="storage")
 
 app.include_router(auth_router, prefix="/api/v1")
@@ -63,6 +70,12 @@ app.include_router(contact_admin_router, prefix="/api/v1")
 app.include_router(chat_router, prefix="/api/v1")
 app.include_router(tapin_router, prefix="/api/v1")
 app.include_router(tapin_admin_router, prefix="/api/v1")
+app.include_router(pos_admin_router, prefix="/api/v1")
+app.include_router(analytics_admin_router, prefix="/api/v1")
+app.include_router(occasions_router, prefix="/api/v1")
+app.include_router(occasions_admin_router, prefix="/api/v1")
+app.include_router(instagram_router, prefix="/api/v1")
+app.include_router(instagram_admin_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")
